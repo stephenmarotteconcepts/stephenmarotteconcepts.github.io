@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Engine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#181210; --surface:#211915; --raised:#2a211b; --line:#3a2e25;
+  --ink:#f2e9e1; --muted:#a3937f; --dim:#6f6354;
+  --amber:#f0a04b; --amber-hi:#f7b566; --ok:#8fb573; --warn:#e07a5f;
+  --mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.55;padding-bottom:env(safe-area-inset-bottom)}
+header{position:sticky;top:0;z-index:20;background:rgba(24,18,16,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.hrow{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 8px}
+.wordmark{font-family:var(--mono);font-weight:700;font-size:17px;letter-spacing:.12em}
+.wordmark b{color:var(--amber)}
+#sync{font-family:var(--mono);font-size:11px;color:var(--dim);display:flex;align-items:center;gap:6px}
+#sync .dot{width:7px;height:7px;border-radius:50%;background:var(--dim)}
+#sync.on .dot{background:var(--ok)}#sync.busy .dot{background:var(--amber)}#sync.mem .dot{background:var(--warn)}
+nav{display:flex;gap:4px;overflow-x:auto;padding:0 12px 10px;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav button{flex:0 0 auto;font-family:var(--mono);font-size:12.5px;letter-spacing:.06em;color:var(--muted);background:transparent;border:1px solid transparent;border-radius:8px;padding:7px 12px;cursor:pointer}
+nav button.active{color:var(--amber);border-color:var(--line);background:var(--surface)}
+main{max-width:680px;margin:0 auto;padding:16px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin:22px 0 10px}
+.eyebrow:first-child{margin-top:4px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
+.card.hot{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber) inset}
+.ctitle{font-weight:600;font-size:15.5px;margin-bottom:2px}
+.cmeta{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.05em;margin-bottom:10px}
+.cmeta .tag{color:var(--amber)}
+.script{font-family:var(--mono);font-size:13.5px;line-height:1.75;white-space:pre-wrap;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:14px;max-height:340px;overflow-y:auto}
+.capture{font-size:13px;color:var(--muted);margin-top:10px;padding-left:10px;border-left:2px solid var(--line)}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+button.b{font-family:var(--mono);font-size:12.5px;letter-spacing:.04em;border-radius:9px;padding:9px 14px;cursor:pointer;border:1px solid var(--line);background:var(--raised);color:var(--ink)}
+button.b.prime{background:var(--amber);border-color:var(--amber);color:#1c130a;font-weight:700}
+button.b.prime:active{background:var(--amber-hi)}
+button.b.ghost{background:transparent;color:var(--muted)}
+button.b:disabled{opacity:.45;cursor:default}
+textarea,input[type=text],input[type=number]{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;color:var(--ink);font-family:var(--sans);font-size:15px;padding:11px}
+textarea{min-height:110px;resize:vertical;line-height:1.6}
+textarea.mono{font-family:var(--mono);font-size:13px}
+label.f{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin:12px 0 6px}
+.pill{display:inline-block;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;border:1px solid var(--line);border-radius:99px;padding:3px 9px;color:var(--muted)}
+.pill.amber{color:var(--amber);border-color:var(--amber)}
+.pill.ok{color:var(--ok);border-color:var(--ok)}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.filters button{font-family:var(--mono);font-size:11.5px;background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:99px;padding:5px 12px;cursor:pointer}
+.filters button.active{color:var(--amber);border-color:var(--amber)}
+.lintflag{font-size:13px;color:var(--warn);padding:6px 0;border-bottom:1px dashed var(--line)}
+.lintok{font-size:13px;color:var(--ok);padding:6px 0}
+.row{display:flex;gap:8px;align-items:center}
+.row input{flex:1}
+.small{font-size:13px;color:var(--muted)}
+.tiny{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.ideaitem,.clipitem,.trackitem{padding:10px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.ideaitem:last-child,.clipitem:last-child,.trackitem:last-child{border-bottom:none}
+.empty{color:var(--dim);font-size:14px;font-style:italic;padding:8px 0}
+.note{font-size:13px;color:var(--muted);background:var(--raised);border-radius:10px;padding:12px;margin-bottom:14px}
+.note b{color:var(--amber);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--amber);color:#1c130a;font-family:var(--mono);font-size:13px;font-weight:700;padding:10px 18px;border-radius:99px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:50}
+#toast.show{opacity:1}
+.view{display:none}.view.active{display:block}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="hrow">
+    <div class="wordmark">ENGINE<b>_</b></div>
+    <div id="sync" class="busy"><span class="dot"></span><span id="synctext">loading</span></div>
+  </div>
+  <nav id="nav">
+    <button data-v="today" class="active">TODAY</button>
+    <button data-v="posts">POSTS</button>
+    <button data-v="make">MAKE</button>
+    <button data-v="ideas">IDEAS</button>
+    <button data-v="track">TRACK</button>
+    <button data-v="research">RESEARCH</button>
+  </nav>
+</header>
+<main>
+  <section id="v-today" class="view active"></section>
+  <section id="v-posts" class="view">
+    <div class="filters" id="postfilters">
+      <button data-f="all" class="active">all</button>
+      <button data-f="queued">queued</button>
+      <button data-f="posted">posted</button>
+    </div>
+    <div class="filters" id="catfilters" style="margin-top:-8px">
+      <button data-c="all" class="active">every category</button>
+      <button data-c="ai">ai builds</button>
+      <button data-c="corpay">corpay</button>
+    </div>
+    <div id="postlist"></div>
+  </section>
+  <section id="v-make" class="view">
+    <div class="note"><b>How this works.</b> Dump rough notes or a voice-memo transcript about a build. It comes back as a post in your voice. No API key set... use Copy Prompt, paste into your Claude app, paste the result back here to lint and save.</div>
+    <label class="f">Rough notes</label>
+    <textarea id="gen-notes" placeholder="what you built, why, what broke, what it does now..."></textarea>
+    <div class="btnrow">
+      <button class="b prime" id="gen-run">Write it</button>
+      <button class="b" id="gen-copyprompt">Copy prompt</button>
+    </div>
+    <label class="f">The post (edit freely)</label>
+    <textarea id="gen-out" class="mono" placeholder="result lands here... or paste from your Claude app"></textarea>
+    <div class="btnrow">
+      <button class="b" id="gen-lint">Run voice check</button>
+      <button class="b prime" id="gen-save">Save to post bank</button>
+      <button class="b ghost" id="gen-copyout">Copy</button>
+    </div>
+    <div id="gen-flags"></div>
+  </section>
+  <section id="v-ideas" class="view">
+    <div class="row" style="margin-bottom:14px">
+      <input type="text" id="idea-in" placeholder="drop an idea...">
+      <button class="b prime" id="idea-add">Add</button>
+    </div>
+    <div id="idealist"></div>
+  </section>
+  <section id="v-track" class="view">
+    <div class="note"><b>Log what happened.</b> A day or two after a post goes up, log it. Comments and DMs from real sales and AI people are the score. Likes aren't.</div>
+    <label class="f">Which post</label>
+    <select id="tr-post" style="width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;color:var(--ink);padding:11px;font-size:15px"></select>
+    <div class="grid2" style="margin-top:10px">
+      <div><label class="f">Comments</label><input type="number" id="tr-com" min="0" placeholder="0"></div>
+      <div><label class="f">DMs</label><input type="number" id="tr-dm" min="0" placeholder="0"></div>
+      <div><label class="f">New followers</label><input type="number" id="tr-fol" min="0" placeholder="0"></div>
+      <div><label class="f">Impressions</label><input type="number" id="tr-imp" min="0" placeholder="optional"></div>
+    </div>
+    <label class="f">Note... who showed up, what they said</label>
+    <input type="text" id="tr-note" placeholder="2 DMs from sales managers...">
+    <div class="btnrow"><button class="b prime" id="tr-save">Log it</button></div>
+    <div class="eyebrow">History</div>
+    <div id="tracklist"></div>
+    <div class="eyebrow">Backup</div>
+    <div class="card">
+      <div class="small" style="margin-bottom:10px">Everything saves in this browser automatically. Export a copy now and then for safety... import restores it, or moves your history to a new device.</div>
+      <div class="btnrow" style="margin-top:0">
+        <button class="b" id="bk-export">Export backup</button>
+        <button class="b ghost" id="bk-import">Import backup</button>
+        <input type="file" id="bk-file" accept=".json,application/json" style="display:none">
+      </div>
+    </div>
+  </section>
+  <section id="v-research" class="view">
+    <div class="note"><b>Monday. 15 minutes.</b> Copy this, run it in Meta AI, paste what comes back below, save the good lines as ideas. That's the whole loop.</div>
+    <div class="card"><div class="script" id="research-prompt"></div>
+    <div class="btnrow"><button class="b prime" id="res-copy">Copy research prompt</button></div></div>
+    <label class="f">Paste results</label>
+    <textarea id="res-paste" placeholder="paste Meta AI's answer here..."></textarea>
+    <div class="btnrow"><button class="b" id="res-save">Save lines as ideas</button></div>
+  </section>
+</main>
+<div id="toast">copied</div>
+<script>
+/* ============================================================
+   ENGINE — Stephen's content cockpit
+   Saves automatically in this browser... no setup needed.
+   Optional: add JSONBin keys + push to GitHub Pages later
+   if you ever want phone + laptop sync.
+   ============================================================ */
+const CONFIG = {
+  JSONBIN_BIN_ID: "",   // jsonbin.io → create bin → copy Bin ID
+  JSONBIN_KEY:    "",   // jsonbin.io → API Keys → X-Master-Key
+  ANTHROPIC_KEY:  ""    // optional. console.anthropic.com → lets "Write it" run in-app
+};
+
+const SEED_POSTS = [
+{title:"Series 1, Part 1: the ZoomInfo workflow",cat:"corpay",fmt:"video",capture:"READY. Posting Thu 6/11. Optional capture: screen record (mic off) dropping a URL into the project, workup coming back... fake or blurred company name.",body:`In the simplest form of my job, I sell fleet fuel cards.
+
+Here's something I've had success with lately.
+
+I watch websites on ZoomInfo. Intent signals. When a company starts showing interest, I take the URL and drop it into a prospecting project I set up in Claude.
+
+What comes back is a full workup. It grades the account. Pulls whatever's public... news, blogs, LinkedIn posts, who they're hiring. Sizes up the company, employee count, fleet size. Then it tells me who it would reach out to first, how it would prioritize, and how confident it is in all of it.
+
+I'm not technical. I set the project up in plain English and kept tweaking it until the workups came back the way I wanted.
+
+I'm going to break down each piece in the next few posts... the grading, the contact logic, the setup. Follow along if that's useful.`},
+{title:"Series 1, Part 2: what the workup gives me",cat:"ai",fmt:"shots",capture:"READY. Optional: one scrubbed screenshot of a real workup... company name blurred or swapped. Never real prospect names.",body:`Part 2 of the prospecting project... what actually comes back when I drop a URL in.
+
+Five sections, every time.
+
+A snapshot. What the company does, where they operate, how big.
+
+The signals. Hiring surges, expansions, mergers... anything public that says this company is growing or changing. It pulls federal safety records too, which tells me whether the fleet is real or just a guess.
+
+Who to contact. Ranked. The ops seat, the finance seat, the person who owns the function. With a reason next to each name.
+
+A drafted opener for each person, built off the signal it found.
+
+And a confidence rating at the bottom. Pursue hard, worth a look, or walk away. With the reasoning spelled out.
+
+All of this used to be me, one tab at a time. Now I read the workup and decide.
+
+I'm not technical. I described what I wanted in plain English and kept correcting it until the output looked like this.
+
+Next post... how I taught it to write openers that actually sound like me. That one took some work.`},
+{title:"Series 1, Part 3: teaching it my voice",cat:"ai",fmt:"shots",capture:"READY. Optional: side-by-side screenshot of a bad consultant-speak opener vs your rewrite... names scrubbed.",body:`I taught AI to write cold email openers. The first batch was rough.
+
+It kept giving me lines like "coordinating fuel across 17 service centers probably creates branch-to-branch fuel noise."
+
+Nobody talks like that. I don't talk like that. If I said that on a call the prospect would hang up.
+
+So I stopped asking it to write openers and started teaching it how I actually talk.
+
+The fix was one rule. State a plain observation, then float a soft guess. "Seems like your team's running material out to job sites all day, Mike. I imagine the fuel bill's been fun recently."
+
+That's it. A fact and a human guess. No "operational complexity." No "visibility gaps."
+
+The thing that made it stick... I pasted the bad openers back in and said nobody talks like this, here's what I'd say instead. A few rounds of that and the drafts started coming back in my voice.
+
+AI doesn't know your voice until you show it what wrong sounds like.
+
+Not technical. Just stubborn about sounding human.`},
+{title:"Series 1, Part 4: the 8,000 character wall",cat:"ai",fmt:"text",capture:"READY.",body:`I hit ChatGPT's character limit and it ended up improving my whole setup.
+
+My prospecting instructions were about 24,000 characters. Every rule, every example, everything I'd learned. The project limit is 8,000.
+
+So two thirds had to go. That's not editing. That's choosing what the project is actually for.
+
+What survived... the research workflow, who to contact, and the opener rules. The stuff that's useless if lost.
+
+What left... the full email spec. Not deleted. Moved. The research project finds the prospect and hands me the opener. A separate email project builds the email. Each one does one job.
+
+Took a whole session of cutting 30 characters at a time. Ended 4 characters under the cap.
+
+The limit felt like a problem. It was actually the design forcing a decision I should've made anyway. One project, one job. The focused version beats the everything version.`},
+{title:"Nobody gets promoted for re-bidding the fuel card",cat:"corpay",fmt:"text",capture:"READY. Note: this shares a live call line of yours... post it only if you're fine with prospects seeing the move.",body:`Nobody gets promoted for re-bidding the fuel card.
+
+I say that on calls all the time, and I mean it. When a company tells me their fuel program is set, I get it. It got set up years ago, it runs in the background, and there are fifty louder things to deal with.
+
+That's the honest reason most programs never get compared. Not laziness. Rational neglect. The cards work, the trucks fuel up, everyone moves on.
+
+The thing is, set and forget is exactly where money hides. Not because anyone did anything wrong... because nobody's job is to go looking.
+
+So the question I ask isn't whether the program works. It's whether anyone's compared it to anything lately.
+
+Set as in compared in the last couple years... or set as in running in the background since whenever. Those are two very different kinds of set.`},
+{title:"I was wrong about being technical",cat:"ai",fmt:"text",capture:"READY. If you want a real tool count in line four, swap it in.",body:`I thought I needed to be technical to build with AI.
+
+I was wrong.
+
+I don't know what an API really is. I couldn't write a line of code if you paid me.
+
+I've still built a whole shelf of tools I use in my actual sales job. Research projects. Email systems. Trackers.
+
+Here's what I figured out. You don't write the code. You tell the AI what you want, in plain words, like you're explaining it to a coworker. It writes it. When it's wrong, you tell it what's wrong. It tries again.
+
+That's the whole skill.
+
+The barrier isn't technical. It's being willing to look dumb for the first few tries.`},
+{title:"The 30-second email setup",cat:"ai",fmt:"shots",capture:"READY. Optional: scrubbed screenshot of the template + the two custom fields.",body:`My personalized cold emails used to be a copy-paste mess. Now each one takes about 30 seconds to set up.
+
+The old way... one template in our sequencing tool, and for every prospect I'd delete the contents and paste in a fresh email. Template work at send time. Slow, and easy to fumble.
+
+The fix wasn't more AI. It was moving the work around. All my locked language lives in hardcoded templates now. The only custom parts... the opening observation and the bridge line... live in two little fields on the prospect's record.
+
+So per contact... paste two lines, pick a template, add to sequence. Done.
+
+AI writes the custom lines from what's actually true about that company. The system assembles the rest.
+
+The unlock wasn't writing faster. It was noticing that most of every email never changes... so why was I rebuilding it every time.`},
+{title:"What I hand to AI and what I keep",cat:"ai",fmt:"text",capture:"READY.",body:`Here's my rule for what I hand to AI and what I keep.
+
+I hand it the stuff that's the same every time. Research. Cleanup. Formatting. First drafts. The repeatable work that used to eat my mornings.
+
+I keep the stuff that needs a human. The actual conversation. Reading the room. The judgment call on a deal. The relationship.
+
+AI does my prep so I've got more time and energy for the part only I can do.
+
+People frame this as AI replacing salespeople. From inside the job it doesn't feel like that at all. It feels like getting my time back.`},
+{title:"The through-line: fitness to AI",cat:"ai",fmt:"text",capture:"READY. This replaces the old pivot announcement... story, not announcement.",body:`I spent a decade in fitness before this. People ask how that connects to AI and sales.
+
+Here's the honest connection.
+
+At Orangetheory I helped design workout experiences for over 1,300 studios. The whole job was behavior... how do you get a coach, or a member, to actually do the thing, again and again, until it sticks.
+
+Sales is the same job. So is AI adoption. So is most of life, honestly.
+
+Handing someone information changes nothing. Making the new way easier than the old way changes everything.
+
+That's why I build the tools I build. Every one of them exists to make the better way the lazier way.
+
+Different industry. Same muscle.`},
+{title:"How I re-open deals that went cold",cat:"ai",fmt:"text",capture:"READY.",body:`Deals go cold. Here's the structure I use to warm them back up.
+
+Four beats, every time.
+
+The connection. Whatever's true... we talked last summer, or you'd been working with my former colleague.
+
+The soft acknowledgment. Timing was off then. Said lightly, not dwelt on.
+
+What changed. Fuel prices moved, a new product shipped, or just time passed. Whatever actually fits.
+
+The re-open. Back then we were looking at solving X and Y... is that on your radar again?
+
+That last beat is the one that matters. It ties the new conversation to the old problem, so it reads as a continuation instead of a cold pitch.
+
+No tricks in any of this. Just an honest structure for an honest situation... the timing was wrong once, and now it might not be.`},
+{title:"The Orangetheory lesson",cat:"ai",fmt:"text",capture:"READY.",body:`At Orangetheory I learned something that explains my whole AI story.
+
+We had over 1,300 studios. Same workout, same science, same information handed to every coach.
+
+Some studios were electric. Some were dead. Same information.
+
+The difference was never the information. It was whether the new behavior got made easy and rewarding to repeat.
+
+My own AI use followed the same curve. Information didn't move me an inch. One real use that paid off fast did. Then it was easy to repeat. Then it snowballed into everything I build now.
+
+Behavior, not information. I keep relearning that lesson in every part of my life.`},
+{title:"My honest read on AI SDR tools",cat:"ai",fmt:"text",capture:"READY. Opinion post... sharpen with specifics if you've tested tools recently.",body:`People keep asking if an AI SDR could just run my outbound for me.
+
+My honest read... not the way I'd want.
+
+What these tools do well is volume. What I haven't seen them do is judgment. A thousand emails that all sound slightly off, to slightly wrong people, at slightly wrong times... that's not a rep. That's a very fast intern with no taste.
+
+Where AI actually earns its keep in my outbound is as a co-pilot. It researches, drafts, and preps. I decide what goes out. Every send still passes through my taste.
+
+Maybe the fully autonomous version gets there someday. For now, I'd rather have AI make me faster than have it impersonate me badly at scale.`},
+{title:"What's actually in my AI stack",cat:"ai",fmt:"text",capture:"READY.",body:`People ask what AI tools I actually use. The list is shorter than the internet wants it to be.
+
+An assistant I talk to all day... that's where the thinking, the research, and the writing happens. The company's enterprise AI for work workflows. And a coding agent for building my tools.
+
+That's the core. A few utilities around the edges.
+
+I tried the giant stack once. Bought tools I used twice. Forgot my own passwords. Felt behind because some guy on LinkedIn had 40 logos in his stack graphic.
+
+The logos were never the point. A small set, used hard every day, beats a big set you open once.
+
+When something new comes out, the question isn't whether it's impressive. It's whether it replaces something I already trust... or just adds another login.`},
+{title:"The question post",cat:"ai",fmt:"text",capture:"READY. Reply to every comment fast... that's what makes this one work.",body:`Honest question for anyone using AI at work.
+
+How much do you actually use it... every day, or do you forget it's there half the time?
+
+I ask because my own answer changed a lot. At first I barely touched it. Now I'm in it constantly, building little things to do parts of my job for me.
+
+The shift wasn't motivation. It was finding one real use that stuck. After that it snowballed.
+
+So where are you. Daily user, or collecting dust.
+
+Genuinely curious how common my path is.`},
+{title:"The one-prompt myth",cat:"ai",fmt:"video",capture:"READY. Optional capture: screen record several rounds of real back-and-forth... it failing, you correcting, it improving.",body:`People online say they build this stuff with one prompt.
+
+That's not real. At least not for me.
+
+Here's what building actually looks like. I ask for the thing. It comes back close but wrong. I say what's wrong. It fixes that, breaks something else. Round and round.
+
+The last project I tuned took more rounds than I could count. I stopped counting somewhere past ten.
+
+And that's fine. That's normal. The one-prompt thing is a highlight reel, and it makes people feel dumb for doing it the real way.
+
+You're not doing it wrong. Building is back and forth. Anyone telling you otherwise is selling something.`},
+{title:"Why my AI emails got ignored",cat:"ai",fmt:"text",capture:"READY.",body:`For a while my AI-written emails got ignored. Here's why.
+
+They sounded like AI. You can feel it... the perfectly balanced bullets, the closing line no human has ever said out loud.
+
+I could feel it in my own drafts. So the people getting them could too.
+
+What fixed it... I stopped asking AI to write a sales email. Now I bring the rough, human version... my words, my read on the company... and AI cleans it up while keeping my voice.
+
+I bring the human part. It handles the polish. Not the other way around.
+
+That one flip is what finally made AI useful to me for outreach.`},
+{title:"The day I leaked my own keys",cat:"ai",fmt:"text",capture:"READY ONLY AFTER you've rotated the keys. Then it's a great post.",body:`I made a rookie mistake building one of my tools... I accidentally saved my secret keys into the project itself.
+
+For the non-technical folks like me... keys are the passwords that let an app talk to its database. They're supposed to live in a private file that never gets shared. Mine ended up in the project's history.
+
+Here's the part I didn't know. Deleting the file doesn't fix it. The history remembers. The real fix is rotating the keys... generating new ones so the old ones are worthless.
+
+Five minutes in a dashboard. Lesson permanently installed.
+
+I'm learning this stuff one mistake at a time, in public, on purpose. The mistakes are half the education.`},
+{title:"What AI is actually worth to me",cat:"ai",fmt:"text",capture:"READY.",body:`People ask if all this AI stuff is actually worth it.
+
+Here's how I measure it for myself. Not logins. Not tool count. One thing... hours back, and whether those hours turned into more selling.
+
+The research that used to be me, one tab at a time, now happens while I'm doing something else. The email setup that was a copy-paste mess is down to seconds per contact. That time goes back into actual conversations.
+
+And the catch I had to learn... a tool's only worth something if I actually use it. The fancy build I set up and forgot was worth exactly zero.
+
+Used daily, worth a ton. Sitting there, worth nothing. Same tool.`},
+{title:"What I'd tell my past self",cat:"ai",fmt:"text",capture:"READY.",body:`A bunch of builds in, here's what I wish someone told me on day one.
+
+Start with a problem that annoys you. Not a cool idea.
+
+My instinct early on was to build something impressive. Something to show off. Waste of time... I never used it.
+
+The builds that stuck killed a real, specific, annoying part of my week. The research grind. The messy email setup. The tracking I kept doing in my head.
+
+Boring problems. Real time back. Used every day.
+
+If you're non-technical and want to start, don't ask what's cool to build. Ask what part of your job you hate most. Build that.`},
+{title:"What messy fuel actually looks like",cat:"corpay",fmt:"text",capture:"READY.",body:`What fuel spend actually looks like inside most mid-market companies I talk to.
+
+Driver receipts that pile up. Branch cards nobody reviews. A lot of one-off fuel decisions happening at the local level.
+
+None of it is anyone failing at their job. It's just what happens when an operation spreads out and the fuel program stays the size it was years ago.
+
+The conversations that go somewhere usually start with one question... can you tie your fuel spend back to a job, a branch, or a truck. When the answer is sort of, that's where the work is.
+
+Not a pitch. Just the pattern I see every week.`},
+{title:"Why AI didn't stick for me at first",cat:"ai",fmt:"text",capture:"DRAFT. Confirm this matches your real early story before posting... adjust details to what actually happened.",body:`It took me a while to actually use AI. Worth being honest about that.
+
+Having access did nothing for me. The tool sat there. I didn't know what to type, so mostly I didn't type anything.
+
+What changed wasn't a feature or a training video. It was one real use on one real piece of my job that paid off the same day. After that I had a reason to come back. Then a second use. Then it snowballed into building my own tools.
+
+I think about that a lot, because it matches everything I learned coaching... people don't change from being told. They change when the new way pays off fast.
+
+Not an information problem. A first-win problem. At least it was for me.`},
+{title:"The recap",cat:"ai",fmt:"text",capture:"READY... post after the first 15-20 have run.",body:`A few weeks of posting the tools I build for my own sales job. Quick look back.
+
+The prospecting project that works up a company from a URL. The email system that cut setup to seconds. The voice work that made AI stop sounding like a consultant. The mistakes... leaked keys, terrible first openers, builds that took more rounds than I'll admit.
+
+The through-line. None of it required me to be technical. All of it started with a problem I was sick of. And the hardest part was never the tech... it was making the new way stick until it was just how I work.
+
+That last part interests me more than the building, honestly.
+
+More to come... the messy middle included.
+
+If you're figuring this stuff out too, comments are open. Always up to compare notes.`},
+{title:"Day 1 of the prospecting agent",cat:"ai",fmt:"video",capture:"CONDITIONAL. Post when you're ready to show the build publicly. Keep data plumbing vague per the scrub rule... mechanics and learning moments only.",body:`Day 1 of building an agent to automate my prospecting research.
+
+What I already do by hand... watch intent signals, grab the URL when a company looks interesting, drop it into the prospecting project. The workup comes back, I decide.
+
+That works. The agent is the next step. It should watch the signals and run the triage on its own, so the obvious passes never cost me attention and the good ones are waiting, ranked, in the morning.
+
+I'm not technical. This one is a real piece of software, and it's going to take a while.
+
+First session is today. I'll show what breaks.`},
+{title:"Day one of a new build (template)",cat:"ai",fmt:"video",capture:"TEMPLATE. Fill the brackets the day you start something new.",body:`Day 1 of building [the thing you're building].
+
+The problem I'm trying to kill... [the boring task it replaces, and how much time it eats].
+
+Here's my plan. [One plain sentence on what you want it to do.]
+
+I have no idea if this works. I'm not technical, remember.
+
+First try is usually a mess. Let's see.`},
+{title:"A real win, AI-assisted",cat:"corpay",fmt:"text",capture:"CONDITIONAL. Post when you actually close one... fill with real, shareable details only. No confidential customer info.",body:`Closed a good one this week.
+
+Here's the part worth sharing.
+
+The whole reason it was on my radar... the research system I built flagged the company weeks ago. It saw the signals before I would have. Right profile, right timing.
+
+I almost dismissed it. The system was right, I was skeptical.
+
+I did the human part. The calls, the questions, the trust. AI doesn't do that. But it put me in the room weeks earlier than I'd have gotten there on my own.
+
+That's the whole thing for me. AI doesn't close the deal. It gets me to the right deals faster, so I've got more time for the part only I can do.`},
+{title:"What I'm seeing in the market",cat:"corpay",fmt:"text",capture:"DRAFT. Opinion post... make sure it matches what you're actually seeing this quarter.",body:`Most companies running vehicles are getting squeezed right now. Costs up, margins tight.
+
+The instinct is to cut. The operators I find most impressive do something first... they get visible.
+
+They look at the spend that's been running on autopilot. Fuel. Maintenance. The card charges nobody's reviewed in years. And they usually find money that was leaking the whole time, quietly.
+
+It rhymes with what I keep learning in my own AI builds... you can't fix what you can't see.
+
+Visibility first. Then decide what to cut.`},
+{title:"The multi-day build payoff",cat:"ai",fmt:"video",capture:"HOLD. Template for when the agent actually works. Rewrite with what really happened before posting. We don't post fiction.",body:`Remember that prospecting agent I started a while back?
+
+It works now.
+
+[What really happened... how long it took, what broke, what it does each morning now.]
+
+I'm not technical. I built a thing that does a real piece of my job before I wake up.
+
+This is what I mean when I say the barrier is lower than you think.`}
+];
+
+const VOICE_SYSTEM = `You write LinkedIn posts for Stephen, a Director of Business Development who sells fleet fuel cards and builds AI tools for his own job. He is not technical and says so often.
+
+Register: conversational and calm, like explaining something to a colleague he respects. Short paragraphs of one to three sentences. NOT the staccato one-line-per-sentence LinkedIn style. 150 to 300 words.
+
+Hard rules:
+- First person, about what HE did and noticed. Never advice aimed at the reader. Never "your team," "your reps," "you should."
+- Contractions always. Ellipses (...) for pauses. Never em dashes. Never exclamation points. No hashtags. No emojis.
+- Banned words: delve, leverage, utilize, harness, streamline, robust, seamless, transformative, synergy, "not only... but also."
+- Say "mid-market," never "enterprise." Spell "Orangetheory" exactly like that.
+- Confident about his world (what he built, found, fixed), humble about everyone else's. He would rather understate than punch up. Flat endings, not mic drops.
+- Every claim must be true and come from his notes. Never invent details, numbers, time savings, or mechanics.
+- NEVER include real prospect, customer, or deal names. If his notes contain one, swap in a generic stand-in and flag the swap.
+- He tells on himself... the retries, what broke, what sounded dumb at first.
+
+His real voice, from his own outreach (register reference, not for copying into posts):
+"Seems like your team's running material out to job sites all day, Mike. I imagine the fuel bill's been fun recently."
+"Never met someone that wakes up having dreamt about fuel cards... but you wanna take a look so at least you know what else is out there?"
+"Might be nothin for ya, but I couldn't do it justice on a voicemail."
+
+A post opening in the target register:
+"I taught AI to write cold email openers. The first batch was rough. It kept giving me lines like branch-to-branch fuel noise. Nobody talks like that. I don't talk like that."
+
+Output only the post text. No preamble, no quotes around it, no commentary.`;
+
+const RESEARCH_PROMPT = `You're my content researcher. I make build-in-public content about using AI in sales. I'm a non-technical sales guy. My audience is salespeople and business people curious about AI.
+
+Tell me what's working RIGHT NOW in this space, this week:
+
+1. The 10 hook patterns getting the most traction lately on LinkedIn and short-form video, from AI-for-sales and build-in-public creators. Give me the actual opening lines, not summaries.
+
+2. The 5 topics or angles that feel fresh and rising right now, versus played out. One line each on why.
+
+3. Any new AI tool, trend, or news in the last couple weeks that a sales audience would care about, that I could build a post around.
+
+Keep it short and specific. Real lines, real topics. Tell me at the end what you'd double-check.`;
+
+/* ---------- state ---------- */
+let state = { posts: [], ideas: [], clips: [], results: [] };
+let saveTimer = null;
+const hasBin = () => CONFIG.JSONBIN_BIN_ID && CONFIG.JSONBIN_KEY;
+const LS_KEY = 'engine_state_v1';
+const uid = () => Math.random().toString(36).slice(2, 9);
+const $ = id => document.getElementById(id);
+
+function setSync(mode, text){ const s=$('sync'); s.className=mode; $('synctext').textContent=text; }
+
+async function boot(){
+  if (hasBin()){
+    setSync('busy','loading');
+    try{
+      const r = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.JSONBIN_BIN_ID}/latest`,{headers:{'X-Master-Key':CONFIG.JSONBIN_KEY}});
+      if(!r.ok) throw new Error('bin '+r.status);
+      const j = await r.json();
+      const rec = j.record || {};
+      if (Array.isArray(rec.posts) && rec.posts.length){ state = Object.assign(state, rec); mergeSeed(); }
+      else { state.posts = SEED_POSTS.map(seedToPost); save(); }
+      try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){}
+      setSync('on','synced');
+    }catch(e){
+      loadLocal();
+      setSync('mem','bin error... saving here');
+    }
+  } else {
+    loadLocal();
+  }
+  renderAll();
+}
+function loadLocal(){
+  let loaded = null;
+  try{ const raw = localStorage.getItem(LS_KEY); if(raw) loaded = JSON.parse(raw); }catch(e){}
+  if (loaded && Array.isArray(loaded.posts) && loaded.posts.length){
+    state = Object.assign(state, loaded);
+    mergeSeed();
+    setSync('on','saved on this device');
+  } else {
+    state.posts = SEED_POSTS.map(seedToPost);
+    save();
+  }
+}
+function mergeSeed(){
+  const have = new Set(state.posts.map(p=>p.title));
+  let max = Math.max(0,...state.posts.map(p=>p.order));
+  let added = 0;
+  SEED_POSTS.forEach(sd=>{
+    if(!have.has(sd.title)){ state.posts.push({id:uid(),order:++max,title:sd.title,cat:sd.cat,fmt:sd.fmt,body:sd.body,capture:sd.capture||'',status:'queued',postedOn:null}); added++; }
+  });
+  if(added){ save(); toast(added+' new post'+(added>1?'s':'')+' added to the bank'); }
+}
+function seedToPost(s,i){ return { id:'p'+(i+1), order:i, title:s.title, cat:s.cat, fmt:s.fmt, body:s.body, capture:s.capture||'', status:'queued', postedOn:null }; }
+
+function save(){
+  if(!hasBin()){
+    try{
+      localStorage.setItem(LS_KEY, JSON.stringify(state));
+      setSync('on','saved '+new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}));
+    }catch(e){ setSync('mem','not saving... export a backup'); }
+    return;
+  }
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){}
+  setSync('busy','syncing');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async ()=>{
+    try{
+      const r = await fetch(`https://api.jsonbin.io/v3/b/${CONFIG.JSONBIN_BIN_ID}`,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':CONFIG.JSONBIN_KEY},body:JSON.stringify(state)});
+      setSync(r.ok?'on':'mem', r.ok?'saved':'save failed');
+    }catch(e){ setSync('mem','save failed'); }
+  },700);
+}
+
+/* ---------- helpers ---------- */
+function copyText(t){
+  if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(()=>toast('copied')).catch(()=>fallbackCopy(t)); }
+  else fallbackCopy(t);
+}
+function fallbackCopy(t){ const ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');toast('copied');}catch(e){toast('copy failed');} document.body.removeChild(ta); }
+let toastTimer=null;
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),1400); }
+function fmtLabel(f){ return f==='video'?'TEXT + VIDEO':(f==='shots'?'TEXT + SCREENSHOTS':'TEXT ONLY'); }
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+
+/* ---------- voice linter ---------- */
+const BANNED = ['delve','leverage','utilize','harness','streamline','robust','seamless','transformative','synergy'];
+function lint(text){
+  const flags=[];
+  const lower=text.toLowerCase();
+  BANNED.forEach(w=>{ if(new RegExp('\\b'+w,'i').test(text)) flags.push('Banned word: "'+w+'"'); });
+  if(text.includes('\u2014')) flags.push('Em dash found... swap for ellipses');
+  if(text.includes('!')) flags.push('Exclamation point found');
+  if(/not only/i.test(text)) flags.push('"Not only..." construction');
+  if(/orange theory|orangetheory/.test(text) && !/Orangetheory/.test(text.replace(/orangetheory/g,''))){ if(/Orange Theory|OrangeTheory|orange theory/.test(text)) flags.push('Spell it "Orangetheory"... one word, lowercase t'); }
+  if(/enterprise/i.test(text)) flags.push('"Enterprise" found... should this be mid-market?');
+  if(/your team|your reps|you should|you need to/i.test(text)) flags.push('Advice-at-reader framing... keep it first person');
+  if(/#\w/.test(text)) flags.push('Hashtag found');
+  const sentences=text.split(/[.?\n]+/).map(s=>s.trim()).filter(Boolean);
+  sentences.forEach(s=>{ if(s.split(/\s+/).length>24) flags.push('Long sentence: "'+s.slice(0,50)+'..."'); });
+  return flags;
+}
+function renderFlags(flags, mountId){
+  const m=$(mountId);
+  if(!flags.length){ m.innerHTML='<div class="lintok">Clean. Sounds like you.</div>'; return; }
+  m.innerHTML = flags.map(f=>'<div class="lintflag">'+esc(f)+'</div>').join('');
+}
+
+/* ---------- TODAY ---------- */
+function renderToday(){
+  const v=$('v-today');
+  const queued = state.posts.filter(p=>p.status==='queued').sort((a,b)=>a.order-b.order);
+  const next = queued[0];
+  const week = queued.slice(0,4);
+  const postedCount = state.posts.filter(p=>p.status==='posted').length;
+  let html = '<div class="eyebrow">Next up</div>';
+  if(next){
+    html += `<div class="card hot">
+      <div class="ctitle">${esc(next.title)}</div>
+      <div class="cmeta"><span class="tag">${next.cat==='corpay'?'CORPAY':'AI BUILD'}</span> · ${fmtLabel(next.fmt)} · post Tue–Thu, 8–10am</div>
+      <div class="script">${esc(next.body)}</div>
+      ${next.capture?`<div class="capture">${esc(next.capture)}</div>`:''}
+      <div class="btnrow">
+        <button class="b prime" onclick="copyPost('${next.id}')">Copy post</button>
+        <button class="b" onclick="markPosted('${next.id}')">Mark posted</button>
+        <button class="b ghost" onclick="skipPost('${next.id}')">Skip to later</button>
+      </div>
+    </div>`;
+  } else {
+    html += '<div class="card"><div class="empty">Post bank is empty or all posted. Hit MAKE and write the next one off a real build.</div></div>';
+  }
+  html += '<div class="eyebrow">This week\u2019s lineup</div>';
+  html += week.length>1 ? week.slice(1).map(p=>`<div class="card" style="padding:12px 16px"><div class="ctitle" style="font-size:14px">${esc(p.title)}</div><div class="cmeta" style="margin:0"><span class="tag">${p.cat==='corpay'?'CORPAY':'AI'}</span> · ${fmtLabel(p.fmt)}</div></div>`).join('') : '<div class="empty">Nothing else queued.</div>';
+  html += `<div class="eyebrow">Capture log</div>
+  <div class="card">
+    <div class="small" style="margin-bottom:10px">Recorded a clip today? Log it so Sunday-you can find it. Mic off, name the file, off the laptop tonight.</div>
+    <div class="row"><input type="text" id="clip-in" placeholder="zoominfo-agent-day2... what happened"><button class="b prime" onclick="addClip()">Log</button></div>
+    <div id="cliplist" style="margin-top:8px"></div>
+  </div>
+  <div class="eyebrow">Score</div>
+  <div class="card"><div class="small">${postedCount} posted · ${queued.length} queued · ${state.clips.length} clips logged</div></div>`;
+  v.innerHTML = html;
+  renderClips();
+  const ci=$('clip-in'); if(ci){ ci.addEventListener('keydown',e=>{ if(e.key==='Enter') addClip(); }); }
+}
+function renderClips(){
+  const m=$('cliplist'); if(!m) return;
+  const recent=[...state.clips].slice(-5).reverse();
+  m.innerHTML = recent.length? recent.map(c=>`<div class="clipitem"><div><div style="font-size:14px">${esc(c.name)}</div><div class="tiny">${c.date}</div></div></div>`).join('') : '';
+}
+function addClip(){
+  const i=$('clip-in'); const val=i.value.trim(); if(!val) return;
+  state.clips.push({id:uid(),name:val,date:new Date().toLocaleDateString()});
+  i.value=''; save(); renderClips(); renderToday();
+}
+function copyPost(id){ const p=state.posts.find(x=>x.id===id); if(p) copyText(p.body); }
+function markPosted(id){ const p=state.posts.find(x=>x.id===id); if(!p) return; p.status='posted'; p.postedOn=new Date().toLocaleDateString(); save(); renderAll(); toast('posted... go reply to comments'); }
+function skipPost(id){ const p=state.posts.find(x=>x.id===id); if(!p) return; p.order = Math.max(...state.posts.map(x=>x.order))+1; save(); renderToday(); renderPosts(); }
+
+/* ---------- POSTS ---------- */
+let postFilter='all', catFilter='all';
+function renderPosts(){
+  const list=$('postlist');
+  let posts=[...state.posts].sort((a,b)=>a.order-b.order);
+  if(postFilter==='queued') posts=posts.filter(p=>p.status==='queued');
+  if(postFilter==='posted') posts=posts.filter(p=>p.status==='posted');
+  if(catFilter!=='all') posts=posts.filter(p=>p.cat===catFilter);
+  list.innerHTML = posts.length? posts.map(p=>`
+    <div class="card" id="card-${p.id}">
+      <div class="ctitle">${esc(p.title)}</div>
+      <div class="cmeta"><span class="tag">${p.cat==='corpay'?'CORPAY':'AI BUILD'}</span> · ${fmtLabel(p.fmt)} · ${p.status==='posted'?'<span class="pill ok">posted '+(p.postedOn||'')+'</span>':'<span class="pill amber">queued</span>'}</div>
+      <div class="script" id="body-${p.id}">${esc(p.body)}</div>
+      ${p.capture?`<div class="capture">${esc(p.capture)}</div>`:''}
+      <div class="btnrow">
+        <button class="b prime" onclick="copyPost('${p.id}')">Copy</button>
+        <button class="b" onclick="editPost('${p.id}')">Edit</button>
+        ${p.status==='queued'?`<button class="b" onclick="markPosted('${p.id}')">Mark posted</button>`:`<button class="b ghost" onclick="requeue('${p.id}')">Re-queue</button>`}
+      </div>
+      <div id="edit-${p.id}"></div>
+    </div>`).join('') : '<div class="empty">Nothing here.</div>';
+}
+function requeue(id){ const p=state.posts.find(x=>x.id===id); if(!p) return; p.status='queued'; p.postedOn=null; save(); renderAll(); }
+function editPost(id){
+  const p=state.posts.find(x=>x.id===id); if(!p) return;
+  const mount=$('edit-'+id);
+  if(mount.innerHTML){ mount.innerHTML=''; return; }
+  mount.innerHTML = `<label class="f">Edit</label><textarea class="mono" id="ta-${id}" style="min-height:200px"></textarea>
+  <div class="btnrow"><button class="b prime" onclick="saveEdit('${id}')">Save</button><button class="b ghost" onclick="editPost('${id}')">Cancel</button></div>`;
+  $('ta-'+id).value = p.body;
+}
+function saveEdit(id){
+  const p=state.posts.find(x=>x.id===id); if(!p) return;
+  p.body = $('ta-'+id).value;
+  const flags=lint(p.body);
+  save(); renderPosts(); renderToday();
+  toast(flags.length? flags.length+' voice flags... check MAKE tab rules':'saved... clean');
+}
+
+/* ---------- MAKE ---------- */
+function buildFullPrompt(notes){
+  return VOICE_SYSTEM + '\n\n---\n\nMy rough notes about the build:\n\n' + notes + '\n\nWrite the LinkedIn post.';
+}
+async function genRun(){
+  const notes=$('gen-notes').value.trim();
+  if(!notes){ toast('drop notes first'); return; }
+  if(!CONFIG.ANTHROPIC_KEY){ toast('no API key... use Copy prompt'); return; }
+  const btn=$('gen-run'); btn.disabled=true; btn.textContent='Writing...';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':CONFIG.ANTHROPIC_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:VOICE_SYSTEM,messages:[{role:'user',content:'My rough notes about the build:\n\n'+notes+'\n\nWrite the LinkedIn post.'}]})});
+    const j=await r.json();
+    const out=(j.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n').trim();
+    if(!out) throw new Error('empty');
+    $('gen-out').value=out;
+    renderFlags(lint(out),'gen-flags');
+  }catch(e){ toast('API call failed... use Copy prompt'); }
+  btn.disabled=false; btn.textContent='Write it';
+}
+function genSave(){
+  const body=$('gen-out').value.trim();
+  if(!body){ toast('nothing to save'); return; }
+  const title = body.split('\n')[0].slice(0,52) || 'New post';
+  state.posts.push({id:uid(),order:Math.max(0,...state.posts.map(x=>x.order))+1,title:title,cat:'ai',fmt:'text',body:body,capture:'',status:'queued',postedOn:null});
+  save(); renderAll(); toast('saved to post bank');
+  $('gen-notes').value=''; $('gen-out').value=''; $('gen-flags').innerHTML='';
+}
+
+/* ---------- IDEAS ---------- */
+function renderIdeas(){
+  const m=$('idealist');
+  const ideas=[...state.ideas].reverse();
+  m.innerHTML = ideas.length? ideas.map(i=>`
+    <div class="ideaitem">
+      <div style="flex:1"><div style="font-size:14.5px">${esc(i.text)}</div><div class="tiny">${i.date||''}${i.used?' · used':''}</div></div>
+      <div style="display:flex;gap:6px">
+        <button class="b" style="padding:6px 10px" onclick="ideaToMake('${i.id}')">Make</button>
+        <button class="b ghost" style="padding:6px 10px" onclick="delIdea('${i.id}')">×</button>
+      </div>
+    </div>`).join('') : '<div class="empty">No ideas banked. Monday research feeds this.</div>';
+}
+function addIdea(textArg){
+  const t = textArg!==undefined? textArg : $('idea-in').value.trim();
+  if(!t) return;
+  state.ideas.push({id:uid(),text:t,date:new Date().toLocaleDateString(),used:false});
+  if(textArg===undefined) $('idea-in').value='';
+  save(); renderIdeas();
+}
+function delIdea(id){ state.ideas=state.ideas.filter(i=>i.id!==id); save(); renderIdeas(); }
+function ideaToMake(id){
+  const i=state.ideas.find(x=>x.id===id); if(!i) return;
+  i.used=true; save();
+  $('gen-notes').value = i.text;
+  switchView('make');
+}
+
+/* ---------- TRACK ---------- */
+function renderTrack(){
+  const sel=$('tr-post');
+  const posted=state.posts.filter(p=>p.status==='posted');
+  sel.innerHTML = posted.length? posted.map(p=>`<option value="${p.id}">${esc(p.title)}</option>`).join('') : '<option value="">nothing posted yet</option>';
+  const m=$('tracklist');
+  const rows=[...state.results].reverse();
+  m.innerHTML = rows.length? rows.map(r=>{
+    const p=state.posts.find(x=>x.id===r.postId);
+    const hot = (r.dms>0||r.comments>=5);
+    return `<div class="trackitem"><div style="flex:1">
+      <div style="font-size:14px">${esc(p?p.title:'(deleted post)')} ${hot?'<span class="pill amber">worked</span>':''}</div>
+      <div class="tiny">${r.date} · ${r.comments} comments · ${r.dms} DMs · ${r.follows} follows${r.imp?' · '+r.imp+' imp':''}</div>
+      ${r.note?`<div class="small" style="margin-top:3px">${esc(r.note)}</div>`:''}
+    </div></div>`;
+  }).join('') : '<div class="empty">No results logged yet.</div>';
+}
+function trackSave(){
+  const postId=$('tr-post').value;
+  if(!postId){ toast('post something first'); return; }
+  state.results.push({id:uid(),postId:postId,date:new Date().toLocaleDateString(),comments:+($('tr-com').value||0),dms:+($('tr-dm').value||0),follows:+($('tr-fol').value||0),imp:+($('tr-imp').value||0),note:$('tr-note').value.trim()});
+  ['tr-com','tr-dm','tr-fol','tr-imp','tr-note'].forEach(i=>$(i).value='');
+  save(); renderTrack(); toast('logged');
+}
+
+/* ---------- RESEARCH ---------- */
+function resSaveIdeas(){
+  const raw=$('res-paste').value;
+  const lines=raw.split('\n').map(l=>l.replace(/^[\s\-\*\d\.\)]+/,'').trim()).filter(l=>l.length>18 && l.length<240).slice(0,15);
+  if(!lines.length){ toast('nothing usable found'); return; }
+  lines.forEach(l=>state.ideas.push({id:uid(),text:l,date:new Date().toLocaleDateString(),used:false}));
+  save(); renderIdeas(); $('res-paste').value='';
+  toast(lines.length+' ideas banked'); switchView('ideas');
+}
+
+/* ---------- backup ---------- */
+function exportBackup(){
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='engine-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+  toast('backup downloaded');
+}
+function importBackup(file){
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const j=JSON.parse(r.result);
+      if(!Array.isArray(j.posts)) throw new Error('bad');
+      state=Object.assign({posts:[],ideas:[],clips:[],results:[]},j);
+      save(); renderAll(); toast('backup restored');
+    }catch(e){ toast('not a valid backup file'); }
+  };
+  r.readAsText(file);
+}
+
+/* ---------- nav + boot ---------- */
+function switchView(v){
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.v===v));
+  document.querySelectorAll('.view').forEach(s=>s.classList.remove('active'));
+  $('v-'+v).classList.add('active');
+  window.scrollTo(0,0);
+}
+function renderAll(){ renderToday(); renderPosts(); renderIdeas(); renderTrack(); }
+
+document.addEventListener('DOMContentLoaded',()=>{
+  $('research-prompt').textContent = RESEARCH_PROMPT;
+  $('nav').addEventListener('click',e=>{ const b=e.target.closest('button'); if(b) switchView(b.dataset.v); });
+  $('postfilters').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; postFilter=b.dataset.f; document.querySelectorAll('#postfilters button').forEach(x=>x.classList.toggle('active',x===b)); renderPosts(); });
+  $('catfilters').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; catFilter=b.dataset.c; document.querySelectorAll('#catfilters button').forEach(x=>x.classList.toggle('active',x===b)); renderPosts(); });
+  $('bk-export').addEventListener('click',exportBackup);
+  $('bk-import').addEventListener('click',()=>$('bk-file').click());
+  $('bk-file').addEventListener('change',e=>{ if(e.target.files[0]) importBackup(e.target.files[0]); e.target.value=''; });
+  $('idea-add').addEventListener('click',()=>addIdea());
+  $('idea-in').addEventListener('keydown',e=>{ if(e.key==='Enter') addIdea(); });
+  $('gen-run').addEventListener('click',genRun);
+  $('gen-copyprompt').addEventListener('click',()=>{ const n=$('gen-notes').value.trim(); if(!n){toast('drop notes first');return;} copyText(buildFullPrompt(n)); });
+  $('gen-lint').addEventListener('click',()=>renderFlags(lint($('gen-out').value),'gen-flags'));
+  $('gen-copyout').addEventListener('click',()=>{ const o=$('gen-out').value.trim(); if(o) copyText(o); });
+  $('gen-save').addEventListener('click',genSave);
+  $('tr-save').addEventListener('click',trackSave);
+  $('res-copy').addEventListener('click',()=>copyText(RESEARCH_PROMPT));
+  $('res-save').addEventListener('click',resSaveIdeas);
+  boot();
+});
+</script>
+</body>
+</html>
