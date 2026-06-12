@@ -169,43 +169,39 @@ label.f{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.12e
    if you ever want phone + laptop sync.
    ============================================================ */
 const CONFIG = {
-  JSONBIN_BIN_ID: "6a2aba5df5f4af5e29df33ca",   // jsonbin.io → create bin → copy Bin ID
-  JSONBIN_KEY:    "$2a$10$AR.AOFwzI4v8KrMHU3KTguzB/lt.Ebr1y/05gaRmN1BT25phxyO2O",   // jsonbin.io → API Keys → X-Master-Key
+  JSONBIN_BIN_ID: "",   // jsonbin.io → create bin → copy Bin ID
+  JSONBIN_KEY:    "",   // jsonbin.io → API Keys → X-Master-Key
   ANTHROPIC_KEY:  ""    // optional. console.anthropic.com → lets "Write it" run in-app
 };
 
 const SEED_POSTS = [
-{title:"Series 1, Part 1: the ZoomInfo workflow",cat:"corpay",fmt:"video",capture:"READY. Posting Thu 6/11. Optional capture: screen record (mic off) dropping a URL into the project, workup coming back... fake or blurred company name.",body:`In the simplest form of my job, I sell fleet fuel cards.
+{title:"Series 1, Part 1: the ZoomInfo workflow",cat:"corpay",fmt:"video",capture:"POSTED Thu 6/11. This is the published version... the archive copy.",body:`In the simplest form of my job, I sell fleet fuel programs & software. Here's something I've had success with lately.
 
-Here's something I've had success with lately.
+I watch websights & intent signals on ZoomInfo. When a company shows up, I take their URL and drop it into a prospecting project I set up in ChatGPT.
 
-I watch websites on ZoomInfo. Intent signals. When a company starts showing interest, I take the URL and drop it into a prospecting project I set up in Claude.
-
-What comes back is a full workup. It grades the account. Pulls whatever's public... news, blogs, LinkedIn posts, who they're hiring. Sizes up the company, employee count, fleet size. Then it tells me who it would reach out to first, how it would prioritize, and how confident it is in all of it.
+What comes back is a full workup. It finds whatever's public... news, blogs, LinkedIn posts, who they're hiring. Sizes up the company, employee count, fleet size. Then it tells me who it would reach out to first, how it would prioritize, and how confident it is in all of it.
 
 I'm not technical. I set the project up in plain English and kept tweaking it until the workups came back the way I wanted.
 
+And that's the key... for AI to be genuinely helpful, we have to know what we're doing and what we're looking for in the first place. Then we have to articulate exactly what the vision is for what we want. And just keep collaborating with it until we get there.
+
 I'm going to break down each piece in the next few posts... the grading, the contact logic, the setup. Follow along if that's useful.`},
-{title:"Series 1, Part 2: what the workup gives me",cat:"ai",fmt:"shots",capture:"READY. Optional: one scrubbed screenshot of a real workup... company name blurred or swapped. Never real prospect names.",body:`Part 2 of the prospecting project... what actually comes back when I drop a URL in.
+{title:"Series 1, Part 2: what the workup gives me",cat:"ai",fmt:"text",capture:"READY... locked for Mon 6/15. Mindset leads, the walk-away grade is the proof.",body:`Most reps I see using AI are using it to do more. More emails, more touches, more pipeline.
 
-Five sections, every time.
+I mostly use it to do less.
 
-A snapshot. What the company does, where they operate, how big.
+The most useful output of my prospecting project isn't a list of companies to call. It's the grade at the end that says walk away... knowing who not to call.
 
-The signals. Hiring surges, expansions, mergers... anything public that says this company is growing or changing. It pulls federal safety records too, which tells me whether the fleet is real or just a guess.
+Before I built it, a company would pop up, look interesting, and I'd spend 10-15 minutes digging. News, hiring, fleet size, who runs ops. Sometimes that ended in a real fit. Most times it didn't.
 
-Who to contact. Ranked. The ops seat, the finance seat, the person who owns the function. With a reason next to each name.
+Now the workup does the digging and ends with a grade. Pursue now, worth a look, or walk away... with the reasoning spelled out. When it says walk away, I trust it and move on.
 
-A drafted opener for each person, built off the signal it found.
+That's the mindset shift that made AI actually useful for me. It's not a do-everything machine. It's not even a do-more machine. It's good at specific jobs... and one of the best jobs I've given it is protecting everyone's time. Mine, and the people who would've gotten a call that never should've happened.
 
-And a confidence rating at the bottom. Pursue hard, worth a look, or walk away. With the reasoning spelled out.
+Research as a filter, not a net.
 
-All of this used to be me, one tab at a time. Now I read the workup and decide.
-
-I'm not technical. I described what I wanted in plain English and kept correcting it until the output looked like this.
-
-Next post... how I taught it to write openers that actually sound like me. That one took some work.`},
-{title:"Series 1, Part 3: teaching it my voice",cat:"ai",fmt:"shots",capture:"READY. Optional: side-by-side screenshot of a bad consultant-speak opener vs your rewrite... names scrubbed.",body:`I taught AI to write cold email openers. The first batch was rough.
+Next up... how I taught it to find the right people inside a company, and to write like me instead of like a robot.`},
+{title:"Series 1, Part 3: teaching it my voice",cat:"ai",fmt:"shots",capture:"READY for Tue 6/16. Optional: side-by-side screenshot of a bad consultant-speak opener vs your rewrite... names scrubbed.",body:`I taught AI to write cold email openers. The first batch was rough.
 
 It kept giving me lines like "coordinating fuel across 17 service centers probably creates branch-to-branch fuel noise."
 
@@ -219,9 +215,7 @@ That's it. A fact and a human guess. No "operational complexity." No "visibility
 
 The thing that made it stick... I pasted the bad openers back in and said nobody talks like this, here's what I'd say instead. A few rounds of that and the drafts started coming back in my voice.
 
-AI doesn't know your voice until you show it what wrong sounds like.
-
-Not technical. Just stubborn about sounding human.`},
+AI doesn't know your voice until you show it what wrong sounds like.`},
 {title:"Series 1, Part 4: the 8,000 character wall",cat:"ai",fmt:"text",capture:"READY.",body:`I hit ChatGPT's character limit and it ended up improving my whole setup.
 
 My prospecting instructions were about 24,000 characters. Every rule, every example, everything I'd learned. The project limit is 8,000.
@@ -259,17 +253,15 @@ Here's what I figured out. You don't write the code. You tell the AI what you wa
 That's the whole skill.
 
 The barrier isn't technical. It's being willing to look dumb for the first few tries.`},
-{title:"The 30-second email setup",cat:"ai",fmt:"shots",capture:"READY. Optional: scrubbed screenshot of the template + the two custom fields.",body:`My personalized cold emails used to be a copy-paste mess. Now each one takes about 30 seconds to set up.
+{title:"The 30-second email setup",cat:"ai",fmt:"shots",capture:"READY. Leads with the reader's side... the two lines they actually feel. Optional: scrubbed screenshot of the template + custom fields.",body:`The part of a cold email the reader actually feels is about two lines long. The opener that proves I looked, and the bridge that says why them, why now. Everything else is furniture.
 
-The old way... one template in our sequencing tool, and for every prospect I'd delete the contents and paste in a fresh email. Template work at send time. Slow, and easy to fumble.
+So that's how I rebuilt my email system. The furniture... my locked language, the parts that never change... lives in hardcoded templates. The two lines that matter live in two little fields on the prospect's record, written fresh for every company from what's actually true about them.
 
-The fix wasn't more AI. It was moving the work around. All my locked language lives in hardcoded templates now. The only custom parts... the opening observation and the bridge line... live in two little fields on the prospect's record.
+Per contact: paste two lines, pick a template, add to sequence. About 30 seconds.
 
-So per contact... paste two lines, pick a template, add to sequence. Done.
+The goal was never speed though. Speed is just what's left over when you stop rebuilding the parts that never change. The goal was making sure the only part the reader feels is the part that took actual thought.
 
-AI writes the custom lines from what's actually true about that company. The system assembles the rest.
-
-The unlock wasn't writing faster. It was noticing that most of every email never changes... so why was I rebuilding it every time.`},
+The reader gets the effort. The system gets the busywork.`},
 {title:"What I hand to AI and what I keep",cat:"ai",fmt:"text",capture:"READY.",body:`Here's my rule for what I hand to AI and what I keep.
 
 I hand it the stuff that's the same every time. Research. Cleanup. Formatting. First drafts. The repeatable work that used to eat my mornings.
@@ -278,7 +270,7 @@ I keep the stuff that needs a human. The actual conversation. Reading the room. 
 
 AI does my prep so I've got more time and energy for the part only I can do.
 
-People frame this as AI replacing salespeople. From inside the job it doesn't feel like that at all. It feels like getting my time back.`},
+People frame this as AI replacing salespeople. From inside the job it doesn't feel like that at all. It feels like getting my time back... and spending it on the people instead of the prep.`},
 {title:"The through-line: fitness to AI",cat:"ai",fmt:"text",capture:"READY. This replaces the old pivot announcement... story, not announcement.",body:`I spent a decade in fitness before this. People ask how that connects to AI and sales.
 
 Here's the honest connection.
@@ -318,13 +310,13 @@ The difference was never the information. It was whether the new behavior got ma
 My own AI use followed the same curve. Information didn't move me an inch. One real use that paid off fast did. Then it was easy to repeat. Then it snowballed into everything I build now.
 
 Behavior, not information. I keep relearning that lesson in every part of my life.`},
-{title:"My honest read on AI SDR tools",cat:"ai",fmt:"text",capture:"READY. Opinion post... sharpen with specifics if you've tested tools recently.",body:`People keep asking if an AI SDR could just run my outbound for me.
+{title:"My honest read on AI SDR tools",cat:"ai",fmt:"text",capture:"READY. Opinion post... names the receiving end of AI volume.",body:`People keep asking if an AI SDR could just run my outbound for me.
 
 My honest read... not the way I'd want.
 
-What these tools do well is volume. What I haven't seen them do is judgment. A thousand emails that all sound slightly off, to slightly wrong people, at slightly wrong times... that's not a rep. That's a very fast intern with no taste.
+What these tools do well is volume. What I haven't seen them do is judgment. A thousand emails that all sound slightly off, to slightly wrong people... that's not a rep, that's a very fast intern with no taste. And the part almost nobody talks about... every one of those emails lands on a real person. Volume without judgment isn't pipeline. It's a thousand people learning your company doesn't value their time.
 
-Where AI actually earns its keep in my outbound is as a co-pilot. It researches, drafts, and preps. I decide what goes out. Every send still passes through my taste.
+Where AI earns its keep in my outbound is as a co-pilot. It researches, drafts, and preps. I decide what goes out. Every send still passes through my taste, because my name is on it and somebody real is opening it.
 
 Maybe the fully autonomous version gets there someday. For now, I'd rather have AI make me faster than have it impersonate me badly at scale.`},
 {title:"What's actually in my AI stack",cat:"ai",fmt:"text",capture:"READY.",body:`People ask what AI tools I actually use. The list is shorter than the internet wants it to be.
@@ -475,7 +467,34 @@ It works now.
 
 I'm not technical. I built a thing that does a real piece of my job before I wake up.
 
-This is what I mean when I say the barrier is lower than you think.`}
+This is what I mean when I say the barrier is lower than you think.`},
+{title:"How I measure AI: the receiving end",cat:"ai",fmt:"text",capture:"FLOATER... post week 2 or 3 once the workflow series has credibility. Keep at least a week away from the through-line post... they're cousins.",body:`Most people measure AI in sales by what it saves the seller. Time, clicks, headcount.
+
+I measure it by how it lands on the person receiving it.
+
+That comes from my last career. I spent a decade in fitness, and at Orangetheory I helped design the workout experience for over 1,300 studios. The biggest lesson from those years... the experience is the product. Same equipment, same science everywhere. What people came back for was how it felt.
+
+Sales works the same way. My product has competitors. The experience of buying from me is the part I fully control.
+
+So that's the test I run every AI build through. Does this make things better for the person on the other end... or just faster for me? The research project passes because the wrong-fit companies never hear from me at all. The email system passes because every message opens with something true about their world instead of a template.
+
+If it only helps me, it's not done yet.
+
+AI didn't change that standard. It just gave me more ways to hit it.`},
+{title:"Steal my starter research prompt",cat:"ai",fmt:"text",capture:"CONDITIONAL... post after someone actually asks for the setup (likely after Part 3). If nobody has asked by series end, swap the first line to: Here's a starter version of the prompt behind my prospecting workups. Never post the real version.",body:`A few people have asked about the setup behind my prospecting workups. Here's a starter version of the prompt... generic on purpose, so it works for whatever you sell.
+
+Paste this into a project in ChatGPT or Claude, then drop in a company URL:
+
+You're my account researcher. When I give you a company URL, return:
+1. Snapshot... what they do, where they operate, rough size.
+2. Signals... recent news, hiring, expansions, anything public that says this company is growing or changing.
+3. People... the 2-3 roles most likely to own the problem I solve, with a one-line reason for each.
+4. A grade... pursue now, worth a look, or walk away. Spell out your reasoning & how confident you are.
+My product: [what you sell]. My buyer: [who signs & who uses it]. A good fit looks like: [your 2-3 fit markers]. Be honest when something's a walk away... that's the most useful answer you can give me.
+
+That last line matters more than the rest of it. The version I run every day took a lot of rounds of correcting... mostly teaching it what a bad fit looks like, & to stop being polite about it.
+
+If you try it, tell me what you sell & I'll tell you what I'd add for your world.`}
 ];
 
 const VOICE_SYSTEM = `You write LinkedIn posts for Stephen, a Director of Business Development who sells fleet fuel cards and builds AI tools for his own job. He is not technical and says so often.
@@ -525,6 +544,10 @@ const $ = id => document.getElementById(id);
 function setSync(mode, text){ const s=$('sync'); s.className=mode; $('synctext').textContent=text; }
 
 async function boot(){
+  try{
+    if(CONFIG.JSONBIN_BIN_ID && CONFIG.JSONBIN_KEY){ localStorage.setItem('engine_keys', JSON.stringify({b:CONFIG.JSONBIN_BIN_ID,k:CONFIG.JSONBIN_KEY})); }
+    else { const kk=JSON.parse(localStorage.getItem('engine_keys')||'null'); if(kk&&kk.b&&kk.k){ CONFIG.JSONBIN_BIN_ID=kk.b; CONFIG.JSONBIN_KEY=kk.k; } }
+  }catch(e){}
   if (hasBin()){
     setSync('busy','loading');
     try{
@@ -532,7 +555,7 @@ async function boot(){
       if(!r.ok) throw new Error('bin '+r.status);
       const j = await r.json();
       const rec = j.record || {};
-      if (Array.isArray(rec.posts) && rec.posts.length){ state = Object.assign(state, rec); mergeSeed(); }
+      if (Array.isArray(rec.posts) && rec.posts.length){ state = Object.assign(state, rec); syncSeed(); }
       else { state.posts = SEED_POSTS.map(seedToPost); save(); }
       try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){}
       setSync('on','synced');
@@ -550,21 +573,41 @@ function loadLocal(){
   try{ const raw = localStorage.getItem(LS_KEY); if(raw) loaded = JSON.parse(raw); }catch(e){}
   if (loaded && Array.isArray(loaded.posts) && loaded.posts.length){
     state = Object.assign(state, loaded);
-    mergeSeed();
+    syncSeed();
     setSync('on','saved on this device');
   } else {
     state.posts = SEED_POSTS.map(seedToPost);
     save();
   }
 }
-function mergeSeed(){
-  const have = new Set(state.posts.map(p=>p.title));
+function bHash(str){let h=5381;for(let i=0;i<str.length;i++){h=((h<<5)+h+str.charCodeAt(i))|0;}return h;}
+const OLD_SEED_HASHES = {"Series 1, Part 1: the ZoomInfo workflow":-684718924,"Series 1, Part 2: what the workup gives me":-50952813,"Series 1, Part 3: teaching it my voice":-1216515341,"Series 1, Part 4: the 8,000 character wall":-143679999,"Nobody gets promoted for re-bidding the fuel card":1604503528,"I was wrong about being technical":-1688928448,"The 30-second email setup":582104399,"What I hand to AI and what I keep":779341605,"The through-line: fitness to AI":-1421629142,"How I re-open deals that went cold":1430445415,"The Orangetheory lesson":-1873979370,"My honest read on AI SDR tools":1652270215,"What's actually in my AI stack":1146921362,"The question post":1190255927,"The one-prompt myth":-691744636,"Why my AI emails got ignored":1126810213,"The day I leaked my own keys":1832640063,"What AI is actually worth to me":-2014493669,"What I'd tell my past self":-15090703,"What messy fuel actually looks like":806003942,"Why AI didn't stick for me at first":1423684247,"The recap":1073608120,"Day 1 of the prospecting agent":2109839277,"Day one of a new build (template)":330519174,"A real win, AI-assisted":-1169539527,"What I'm seeing in the market":-1815874390,"The multi-day build payoff":-1626166545};
+function syncSeed(){
+  const byTitle = {}; state.posts.forEach(p=>{ byTitle[p.title]=p; });
+  let added=0, updated=0, kept=[];
   let max = Math.max(0,...state.posts.map(p=>p.order));
-  let added = 0;
   SEED_POSTS.forEach(sd=>{
-    if(!have.has(sd.title)){ state.posts.push({id:uid(),order:++max,title:sd.title,cat:sd.cat,fmt:sd.fmt,body:sd.body,capture:sd.capture||'',status:'queued',postedOn:null}); added++; }
+    const ex = byTitle[sd.title];
+    if(!ex){ state.posts.push({id:uid(),order:++max,title:sd.title,cat:sd.cat,fmt:sd.fmt,body:sd.body,capture:sd.capture||'',status:'queued',postedOn:null}); added++; return; }
+    if(bHash(ex.body)===bHash(sd.body)){
+      if(ex.capture!==sd.capture){ ex.capture=sd.capture; updated++; }
+      return;
+    }
+    const oh = OLD_SEED_HASHES[sd.title];
+    if(oh!==undefined && bHash(ex.body)===oh){
+      ex.body=sd.body; ex.capture=sd.capture; ex.cat=sd.cat; ex.fmt=sd.fmt; updated++;
+    } else {
+      kept.push(sd.title);
+    }
   });
-  if(added){ save(); toast(added+' new post'+(added>1?'s':'')+' added to the bank'); }
+  if(added||updated) save();
+  if(added||updated||kept.length){
+    const bits=[];
+    if(updated) bits.push(updated+' updated');
+    if(added) bits.push(added+' added');
+    if(kept.length) bits.push(kept.length+' kept your edits');
+    toast('Post bank synced: '+bits.join(', '));
+  }
 }
 function seedToPost(s,i){ return { id:'p'+(i+1), order:i, title:s.title, cat:s.cat, fmt:s.fmt, body:s.body, capture:s.capture||'', status:'queued', postedOn:null }; }
 
